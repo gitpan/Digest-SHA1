@@ -3,7 +3,7 @@ package Digest::SHA1;
 use strict;
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '2.03';  # $Date: 2003/07/05 07:14:01 $
+$VERSION = '2.04';  # $Date: 2003/07/23 04:16:45 $
 
 require Exporter;
 *import = \&Exporter::import;
