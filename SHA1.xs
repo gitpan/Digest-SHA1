@@ -1,4 +1,4 @@
-/* $Id: SHA1.xs,v 1.1 2001/03/14 05:14:54 gisle Exp $ */
+/* $Id: SHA1.xs,v 1.3 2002/12/27 09:24:55 gisle Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,6 +8,25 @@ extern "C" {
 #include "XSUB.h"
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef SvPVbyte
+   #if PERL_REVISION == 5 && PERL_VERSION < 7
+       /* SvPVbyte does not work in perl-5.6.1, borrowed version for 5.7.3 */
+       #undef SvPVbyte
+       #define SvPVbyte(sv, lp) \
+          ((SvFLAGS(sv) & (SVf_POK|SVf_UTF8)) == (SVf_POK) \
+           ? ((lp = SvCUR(sv)), SvPVX(sv)) : my_sv_2pvbyte(aTHX_ sv, &lp))
+
+       static char *
+       my_sv_2pvbyte(pTHX_ register SV *sv, STRLEN *lp)
+       {
+           sv_utf8_downgrade(sv,0);
+           return SvPV(sv,*lp);
+       }
+   #endif
+#else
+   #define SvPVbyte SvPV
 #endif
 
 /* NIST Secure Hash Algorithm */
@@ -20,7 +39,11 @@ extern "C" {
 
 /* Useful defines & typedefs */
 
+#if defined(U64TYPE) && (defined(USE_64_BIT_INT) || ((BYTEORDER != 0x1234) && (BYTEORDER != 0x4321)))
+typedef U64TYPE ULONG;
+#else
 typedef unsigned long ULONG;     /* 32-or-more-bit quantity */
+#endif
 
 #define SHA_BLOCKSIZE		64
 #define SHA_DIGESTSIZE		20
@@ -102,6 +125,7 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x1234
 #define SWAP_DONE
+    assert(sizeof(ULONG) == 4);
     for (i = 0; i < 16; ++i) {
 	T = *((ULONG *) dp);
 	dp += 4;
@@ -112,6 +136,7 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x4321
 #define SWAP_DONE
+    assert(sizeof(ULONG) == 4);
     for (i = 0; i < 16; ++i) {
 	T = *((ULONG *) dp);
 	dp += 4;
@@ -121,6 +146,7 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x12345678
 #define SWAP_DONE
+    assert(sizeof(ULONG) == 8);
     for (i = 0; i < 16; i += 2) {
 	T = *((ULONG *) dp);
 	dp += 8;
@@ -134,6 +160,7 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x87654321
 #define SWAP_DONE
+    assert(sizeof(ULONG) == 8);
     for (i = 0; i < 16; i += 2) {
 	T = *((ULONG *) dp);
 	dp += 8;
@@ -430,7 +457,7 @@ add(self, ...)
 	STRLEN len;
     PPCODE:
 	for (i = 1; i < items; i++) {
-	    data = (unsigned char *)(SvPV(ST(i), len));
+	    data = (unsigned char *)(SvPVbyte(ST(i), len));
 	    sha_update(context, data, len);
 	}
 	XSRETURN(1);  /* self */
@@ -482,7 +509,7 @@ sha1(...)
     PPCODE:
 	sha_init(&ctx);
 	for (i = 0; i < items; i++) {
-	    data = (unsigned char *)(SvPV(ST(i), len));
+	    data = (unsigned char *)(SvPVbyte(ST(i), len));
 	    sha_update(&ctx, data, len);
 	}
 	sha_final(digeststr, &ctx);
