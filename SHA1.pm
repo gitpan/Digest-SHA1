@@ -3,11 +3,11 @@ package Digest::SHA1;
 use strict;
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '2.02';  # $Date: 2002/12/27 09:33:50 $
+$VERSION = '2.03';  # $Date: 2003/07/05 07:14:01 $
 
 require Exporter;
 *import = \&Exporter::import;
-@EXPORT_OK = qw(sha1 sha1_hex sha1_base64);
+@EXPORT_OK = qw(sha1 sha1_hex sha1_base64 sha1_transform);
 
 require DynaLoader;
 @ISA=qw(DynaLoader);
@@ -30,6 +30,7 @@ Digest::SHA1 - Perl interface to the SHA-1 Algorithm
  $digest = sha1($data);
  $digest = sha1_hex($data);
  $digest = sha1_base64($data);
+ $digest = sha1_transform($data);
 
 
  # OO style
@@ -43,6 +44,7 @@ Digest::SHA1 - Perl interface to the SHA-1 Algorithm
  $digest = $ctx->digest;
  $digest = $ctx->hexdigest;
  $digest = $ctx->b64digest;
+ $digest = $ctx->transform;
 
 =head1 DESCRIPTION
 
@@ -79,6 +81,11 @@ Same as sha1(), but will return the digest in hexadecimal form.
 
 Same as sha1(), but will return the digest as a base64 encoded string.
 
+=item sha1_transform($data)
+
+Implements the basic SHA1 trasnform on a 64 byte block. $data and the returned $digest are
+in binary form. This algorithm is used in NIST FIPS 186-2
+
 =back
 
 =head1 METHODS
@@ -110,7 +117,7 @@ http://www.itl.nist.gov/fipspubs/fip180-1.htm
 This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
- Copyright 1999-2002 Gisle Aas.
+ Copyright 1999-2003 Gisle Aas.
  Copyright 1997 Uwe Hollerbach.
 
 =head1 AUTHORS

@@ -1,4 +1,4 @@
-/* $Id: SHA1.xs,v 1.3 2002/12/27 09:24:55 gisle Exp $ */
+/* $Id: SHA1.xs,v 1.7 2003/07/05 07:30:40 gisle Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,6 +8,26 @@ extern "C" {
 #include "XSUB.h"
 #ifdef __cplusplus
 }
+#endif
+
+#ifndef PERL_VERSION
+#    include <patchlevel.h>
+#    if !(defined(PERL_VERSION) || (SUBVERSION > 0 && defined(PATCHLEVEL)))
+#        include <could_not_find_Perl_patchlevel.h>
+#    endif
+#    define PERL_REVISION       5
+#    define PERL_VERSION        PATCHLEVEL
+#    define PERL_SUBVERSION     SUBVERSION
+#endif
+
+#if PERL_VERSION <= 4 && !defined(PL_dowarn)
+   #define PL_dowarn dowarn
+#endif
+
+#ifdef G_WARN_ON
+   #define DOWARN (PL_dowarn & G_WARN_ON)
+#else
+   #define DOWARN PL_dowarn
 #endif
 
 #ifdef SvPVbyte
@@ -41,6 +61,13 @@ extern "C" {
 
 #if defined(U64TYPE) && (defined(USE_64_BIT_INT) || ((BYTEORDER != 0x1234) && (BYTEORDER != 0x4321)))
 typedef U64TYPE ULONG;
+# if BYTEORDER == 0x1234
+#   undef BYTEORDER
+#   define BYTEORDER 0x12345678
+# elif BYTEORDER == 0x4321
+#   undef BYTEORDER
+#   define BYTEORDER 0x87654321   
+# endif
 #else
 typedef unsigned long ULONG;     /* 32-or-more-bit quantity */
 #endif
@@ -275,8 +302,33 @@ static void sha_update(SHA_INFO *sha_info, U8 *buffer, int count)
     sha_info->local = count;
 }
 
-/* finish computing the SHA digest */
 
+static void sha_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
+{
+    sha_transform(sha_info);
+    digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
+    digest[ 1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);
+    digest[ 2] = (unsigned char) ((sha_info->digest[0] >>  8) & 0xff);
+    digest[ 3] = (unsigned char) ((sha_info->digest[0]      ) & 0xff);
+    digest[ 4] = (unsigned char) ((sha_info->digest[1] >> 24) & 0xff);
+    digest[ 5] = (unsigned char) ((sha_info->digest[1] >> 16) & 0xff);
+    digest[ 6] = (unsigned char) ((sha_info->digest[1] >>  8) & 0xff);
+    digest[ 7] = (unsigned char) ((sha_info->digest[1]      ) & 0xff);
+    digest[ 8] = (unsigned char) ((sha_info->digest[2] >> 24) & 0xff);
+    digest[ 9] = (unsigned char) ((sha_info->digest[2] >> 16) & 0xff);
+    digest[10] = (unsigned char) ((sha_info->digest[2] >>  8) & 0xff);
+    digest[11] = (unsigned char) ((sha_info->digest[2]      ) & 0xff);
+    digest[12] = (unsigned char) ((sha_info->digest[3] >> 24) & 0xff);
+    digest[13] = (unsigned char) ((sha_info->digest[3] >> 16) & 0xff);
+    digest[14] = (unsigned char) ((sha_info->digest[3] >>  8) & 0xff);
+    digest[15] = (unsigned char) ((sha_info->digest[3]      ) & 0xff);
+    digest[16] = (unsigned char) ((sha_info->digest[4] >> 24) & 0xff);
+    digest[17] = (unsigned char) ((sha_info->digest[4] >> 16) & 0xff);
+    digest[18] = (unsigned char) ((sha_info->digest[4] >>  8) & 0xff);
+    digest[19] = (unsigned char) ((sha_info->digest[4]      ) & 0xff);
+}
+
+/* finish computing the SHA digest */
 static void sha_final(unsigned char digest[20], SHA_INFO *sha_info)
 {
     int count;
@@ -302,28 +354,9 @@ static void sha_final(unsigned char digest[20], SHA_INFO *sha_info)
     sha_info->data[61] = (lo_bit_count >> 16) & 0xff;
     sha_info->data[62] = (lo_bit_count >>  8) & 0xff;
     sha_info->data[63] = (lo_bit_count >>  0) & 0xff;
-    sha_transform(sha_info);
-    digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
-    digest[ 1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);
-    digest[ 2] = (unsigned char) ((sha_info->digest[0] >>  8) & 0xff);
-    digest[ 3] = (unsigned char) ((sha_info->digest[0]      ) & 0xff);
-    digest[ 4] = (unsigned char) ((sha_info->digest[1] >> 24) & 0xff);
-    digest[ 5] = (unsigned char) ((sha_info->digest[1] >> 16) & 0xff);
-    digest[ 6] = (unsigned char) ((sha_info->digest[1] >>  8) & 0xff);
-    digest[ 7] = (unsigned char) ((sha_info->digest[1]      ) & 0xff);
-    digest[ 8] = (unsigned char) ((sha_info->digest[2] >> 24) & 0xff);
-    digest[ 9] = (unsigned char) ((sha_info->digest[2] >> 16) & 0xff);
-    digest[10] = (unsigned char) ((sha_info->digest[2] >>  8) & 0xff);
-    digest[11] = (unsigned char) ((sha_info->digest[2]      ) & 0xff);
-    digest[12] = (unsigned char) ((sha_info->digest[3] >> 24) & 0xff);
-    digest[13] = (unsigned char) ((sha_info->digest[3] >> 16) & 0xff);
-    digest[14] = (unsigned char) ((sha_info->digest[3] >>  8) & 0xff);
-    digest[15] = (unsigned char) ((sha_info->digest[3]      ) & 0xff);
-    digest[16] = (unsigned char) ((sha_info->digest[4] >> 24) & 0xff);
-    digest[17] = (unsigned char) ((sha_info->digest[4] >> 16) & 0xff);
-    digest[18] = (unsigned char) ((sha_info->digest[4] >>  8) & 0xff);
-    digest[19] = (unsigned char) ((sha_info->digest[4]      ) & 0xff);
+    sha_transform_and_copy(digest, sha_info);
 }
+
 
 
 
@@ -442,6 +475,22 @@ new(xclass)
 	XSRETURN(1);
 
 void
+clone(self)
+        SV* self
+    PREINIT:
+        SHA_INFO* cont = get_sha_info(self);
+        char *myname = sv_reftype(SvRV(self),TRUE);
+        SHA_INFO* context;
+    PPCODE:
+        STRLEN my_na;
+        New(55, context, 1, SHA_INFO);
+        ST(0) = sv_newmortal();
+        sv_setref_pv(ST(0), myname , (void*)context);
+        SvREADONLY_on(SvRV(ST(0)));
+        memcpy(context,cont,sizeof(SHA_INFO));
+        XSRETURN(1);
+
+void
 DESTROY(context)
 	SHA_INFO* context
     CODE:
@@ -472,11 +521,18 @@ addfile(self, fh)
 	int  n;
     CODE:
         if (fh) {
-	    /* Process blocks until EOF */
+	    /* Process blocks until EOF or error */
             while ( (n = PerlIO_read(fh, buffer, sizeof(buffer)))) {
 		sha_update(context, buffer, n);
 	    }
+	    if (PerlIO_error(fh)) {
+		croak("Reading from filehandle failed");
+	    }
         }
+        else {
+	    croak("No filehandle passed");
+        }
+ 
 	XSRETURN(1);  /* self */
 
 void
@@ -508,6 +564,31 @@ sha1(...)
 	unsigned char digeststr[20];
     PPCODE:
 	sha_init(&ctx);
+
+	if (DOWARN) {
+            char *msg = 0;
+	    if (items == 1) {
+		if (SvROK(ST(0))) {
+                    SV* sv = SvRV(ST(0));
+		    if (SvOBJECT(sv) && strEQ(HvNAME(SvSTASH(sv)), "Digest::SHA1"))
+		        msg = "probably called as method";
+		    else
+			msg = "called with reference argument";
+		}
+	    }
+	    else if (items > 1) {
+		data = (unsigned char *)SvPVbyte(ST(0), len);
+		if (len == 12 && memEQ("Digest::SHA1", data, 12)) {
+		    msg = "probably called as class method";
+		}
+	    }
+	    if (msg) {
+		char *f = (ix == F_BIN) ? "sha1" :
+                          (ix == F_HEX) ? "sha1_hex" : "sha1_base64";
+	        warn("&Digest::SHA1::%s function %s", f, msg);
+	    }
+	}
+
 	for (i = 0; i < items; i++) {
 	    data = (unsigned char *)(SvPVbyte(ST(i), len));
 	    sha_update(&ctx, data, len);
@@ -515,3 +596,24 @@ sha1(...)
 	sha_final(digeststr, &ctx);
         ST(0) = make_mortal_sv(digeststr, ix);
         XSRETURN(1);
+
+void
+sha1_transform(...)
+    PREINIT:
+        SHA_INFO ctx;
+        int i;
+        unsigned char *data;
+        unsigned char test[64];
+        STRLEN len;
+        unsigned char digeststr[20];
+    PPCODE:
+        sha_init(&ctx);
+        
+        memset (test, 0, 64);
+        data = (unsigned char *)(SvPVbyte(ST(0), len));
+        memcpy (test, data, len);
+	memcpy ((&ctx)->data, test, 64);
+        sha_transform_and_copy(digeststr, &ctx);
+        ST(0) = newSVpv(digeststr, 20);
+        XSRETURN(1);
+
