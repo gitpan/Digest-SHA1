@@ -3,7 +3,7 @@ package Digest::SHA1;
 use strict;
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '2.08';  # $Date: 2004/04/01 10:34:42 $
+$VERSION = '2.09';  # $Date: 2004/04/01 19:21:18 $
 
 require Exporter;
 *import = \&Exporter::import;
@@ -28,7 +28,7 @@ __END__
 
 =head1 NAME
 
-Digest::SHA1 - Perl interface to the SHA-1 Algorithm
+Digest::SHA1 - Perl interface to the SHA-1 algorithm
 
 =head1 SYNOPSIS
 
