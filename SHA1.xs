@@ -1,4 +1,4 @@
-/* $Id: SHA1.xs,v 1.8 2003/07/23 04:16:45 gisle Exp $ */
+/* $Id: SHA1.xs,v 1.9 2003/10/06 12:55:36 gisle Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -614,6 +614,6 @@ sha1_transform(...)
         memcpy (test, data, len);
 	memcpy ((&ctx)->data, test, 64);
         sha_transform_and_copy(digeststr, &ctx);
-        ST(0) = newSVpv(digeststr, 20);
+        ST(0) = newSVpv((char*)digeststr, 20);
         XSRETURN(1);
 

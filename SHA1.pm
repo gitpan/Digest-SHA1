@@ -3,7 +3,7 @@ package Digest::SHA1;
 use strict;
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '2.04';  # $Date: 2003/07/23 04:16:45 $
+$VERSION = '2.05';  # $Date: 2003/10/06 13:32:15 $
 
 require Exporter;
 *import = \&Exporter::import;
@@ -81,9 +81,14 @@ Same as sha1(), but will return the digest in hexadecimal form.
 
 Same as sha1(), but will return the digest as a base64 encoded string.
 
+Note that the base64 encoded string returned is not padded to be a
+multiple of 4 bytes long.  If you want interoperability with other
+base64 encoded sha1 digests you might want to append the redundant
+string "=" to the result.
+
 =item sha1_transform($data)
 
-Implements the basic SHA1 trasnform on a 64 byte block. $data and the returned $digest are
+Implements the basic SHA1 transform on a 64 byte block. $data and the returned $digest are
 in binary form. This algorithm is used in NIST FIPS 186-2
 
 =back
