@@ -1,4 +1,4 @@
-/* $Id: SHA1.xs,v 1.13 2004/04/01 19:17:18 gisle Exp $ */
+/* $Id: SHA1.xs,v 1.14 2004/04/05 07:18:27 gisle Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,6 +48,11 @@ extern "C" {
    #endif
 #else
    #define SvPVbyte SvPV
+#endif
+
+#ifndef dTHX
+   #define pTHX_
+   #define aTHX_
 #endif
 
 /* NIST Secure Hash Algorithm */
