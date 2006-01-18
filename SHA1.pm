@@ -3,7 +3,7 @@ package Digest::SHA1;
 use strict;
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '2.10';  # $Date: 2004/04/05 07:26:23 $
+$VERSION = '2.11';  # $Date: 2006/01/18 11:29:05 $
 
 require Exporter;
 *import = \&Exporter::import;
@@ -227,7 +227,7 @@ http://www.itl.nist.gov/fipspubs/fip180-1.htm
 This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
- Copyright 1999-2003 Gisle Aas.
+ Copyright 1999-2004 Gisle Aas.
  Copyright 1997 Uwe Hollerbach.
 
 =head1 AUTHORS
