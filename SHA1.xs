@@ -1,5 +1,3 @@
-/* $Id: SHA1.xs,v 1.16 2006/01/18 11:25:48 gisle Exp $ */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -66,7 +64,7 @@ extern "C" {
 /* Useful defines & typedefs */
 
 #if defined(U64TYPE) && (defined(USE_64_BIT_INT) || ((BYTEORDER != 0x1234) && (BYTEORDER != 0x4321)))
-typedef U64TYPE ULONG;
+typedef U64TYPE ULONGx;
 # if BYTEORDER == 0x1234
 #   undef BYTEORDER
 #   define BYTEORDER 0x12345678
@@ -75,15 +73,15 @@ typedef U64TYPE ULONG;
 #   define BYTEORDER 0x87654321   
 # endif
 #else
-typedef unsigned long ULONG;     /* 32-or-more-bit quantity */
+typedef unsigned long ULONGx;     /* 32-or-more-bit quantity */
 #endif
 
 #define SHA_BLOCKSIZE		64
 #define SHA_DIGESTSIZE		20
 
 typedef struct {
-    ULONG digest[5];		/* message digest */
-    ULONG count_lo, count_hi;	/* 64-bit bit count */
+    ULONGx digest[5];		/* message digest */
+    ULONGx count_lo, count_hi;	/* 64-bit bit count */
     U8 data[SHA_BLOCKSIZE];	/* SHA data buffer */
     int local;			/* unprocessed amount in data */
 } SHA_INFO;
@@ -144,7 +142,7 @@ static void sha_transform(SHA_INFO *sha_info)
 {
     int i;
     U8 *dp;
-    ULONG T, A, B, C, D, E, W[80], *WP;
+    ULONGx T, A, B, C, D, E, W[80], *WP;
 
     dp = sha_info->data;
 
@@ -158,9 +156,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x1234
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 4); */
+    /* assert(sizeof(ULONGx) == 4); */
     for (i = 0; i < 16; ++i) {
-	T = *((ULONG *) dp);
+	T = *((ULONGx *) dp);
 	dp += 4;
 	W[i] =  ((T << 24) & 0xff000000) | ((T <<  8) & 0x00ff0000) |
 		((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -169,9 +167,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x4321
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 4); */
+    /* assert(sizeof(ULONGx) == 4); */
     for (i = 0; i < 16; ++i) {
-	T = *((ULONG *) dp);
+	T = *((ULONGx *) dp);
 	dp += 4;
 	W[i] = T32(T);
     }
@@ -179,9 +177,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x12345678
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 8); */
+    /* assert(sizeof(ULONGx) == 8); */
     for (i = 0; i < 16; i += 2) {
-	T = *((ULONG *) dp);
+	T = *((ULONGx *) dp);
 	dp += 8;
 	W[i] =  ((T << 24) & 0xff000000) | ((T <<  8) & 0x00ff0000) |
 		((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -193,9 +191,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x87654321
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 8); */
+    /* assert(sizeof(ULONGx) == 8); */
     for (i = 0; i < 16; i += 2) {
-	T = *((ULONG *) dp);
+	T = *((ULONGx *) dp);
 	dp += 8;
 	W[i] = T32(T >> 32);
 	W[i+1] = T32(T);
@@ -275,14 +273,14 @@ static void sha_init(SHA_INFO *sha_info)
 static void sha_update(SHA_INFO *sha_info, U8 *buffer, int count)
 {
     int i;
-    ULONG clo;
+    ULONGx clo;
 
-    clo = T32(sha_info->count_lo + ((ULONG) count << 3));
+    clo = T32(sha_info->count_lo + ((ULONGx) count << 3));
     if (clo < sha_info->count_lo) {
 	++sha_info->count_hi;
     }
     sha_info->count_lo = clo;
-    sha_info->count_hi += (ULONG) count >> 29;
+    sha_info->count_hi += (ULONGx) count >> 29;
     if (sha_info->local) {
 	i = SHA_BLOCKSIZE - sha_info->local;
 	if (i > count) {
@@ -338,7 +336,7 @@ static void sha_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
 static void sha_final(unsigned char digest[20], SHA_INFO *sha_info)
 {
     int count;
-    ULONG lo_bit_count, hi_bit_count;
+    ULONGx lo_bit_count, hi_bit_count;
 
     lo_bit_count = sha_info->count_lo;
     hi_bit_count = sha_info->count_hi;
@@ -383,7 +381,7 @@ static SHA_INFO* get_sha_info(pTHX_ SV* sv)
 
 static char* hex_20(const unsigned char* from, char* to)
 {
-    static char *hexdigits = "0123456789abcdef";
+    static const char *hexdigits = "0123456789abcdef";
     const unsigned char *end = from + 20;
     char *d = to;
 
@@ -398,7 +396,7 @@ static char* hex_20(const unsigned char* from, char* to)
 
 static char* base64_20(const unsigned char* from, char* to)
 {
-    static char* base64 =
+    static const char* base64 =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const unsigned char *end = from + 20;
     unsigned char c1, c2, c3;
@@ -485,7 +483,7 @@ clone(self)
         SV* self
     PREINIT:
         SHA_INFO* cont = get_sha_info(aTHX_ self);
-        char *myname = sv_reftype(SvRV(self),TRUE);
+        const char *myname = sv_reftype(SvRV(self),TRUE);
         SHA_INFO* context;
     PPCODE:
         New(55, context, 1, SHA_INFO);
@@ -571,7 +569,7 @@ sha1(...)
 	sha_init(&ctx);
 
 	if (DOWARN) {
-            char *msg = 0;
+            const char *msg = 0;
 	    if (items == 1) {
 		if (SvROK(ST(0))) {
                     SV* sv = SvRV(ST(0));
@@ -588,8 +586,8 @@ sha1(...)
 		}
 	    }
 	    if (msg) {
-		char *f = (ix == F_BIN) ? "sha1" :
-                          (ix == F_HEX) ? "sha1_hex" : "sha1_base64";
+		const char *f = (ix == F_BIN) ? "sha1" :
+                                (ix == F_HEX) ? "sha1_hex" : "sha1_base64";
 	        warn("&Digest::SHA1::%s function %s", f, msg);
 	    }
 	}
