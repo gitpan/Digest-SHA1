@@ -1,3 +1,10 @@
+2010-07-03   Release 2.13
+
+    Mike McCauley (1):
+          Fix memory leak in sha1_transform
+
+
+
 2009-05-23   Release 2.12
 
     Gisle Aas (6):
@@ -46,7 +53,7 @@
    Enable PERL_NO_GET_CONTEXT for more more efficient execution
    on a threaded perl.
 
-   Fix up md5 references.  Patch by Ville Skytt‰ <ville.skytta@iki.fi>.
+   Fix up md5 references.  Patch by Ville Skytt√§ <ville.skytta@iki.fi>.
 
 
 
@@ -162,7 +169,7 @@ Changes below from the Digest-MD5 dist.
    
    The fallback code introduced in 2.10 did only work for
    perl-5.6.0.  It should now for for perl5.004 and 5.005
-   as well.  Patch by Ville Skytt‰ <ville@office.popsystems.com>.
+   as well.  Patch by Ville Skytt√§ <ville@office.popsystems.com>.
 
 
 
